@@ -1,0 +1,42 @@
+import { defineConfig, devices } from "@playwright/test";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+const outputDirectory =
+  process.env.FIRST_AID_TEST_OUTPUT ??
+  join(homedir(), "codex_output/first-aid-kits");
+
+export default defineConfig({
+  testDir: "./e2e",
+  outputDir: `${outputDirectory}/test-results`,
+  reporter: [
+    ["list"],
+    [
+      "html",
+      { outputFolder: `${outputDirectory}/playwright-report`, open: "never" },
+    ],
+  ],
+  use: {
+    baseURL: "http://127.0.0.1:5173",
+    trace: "retain-on-failure",
+  },
+  projects: [
+    {
+      name: "desktop",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1440, height: 1000 },
+      },
+    },
+    {
+      name: "mobile",
+      use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
+    },
+  ],
+  webServer: {
+    command: "npm run dev -- --host 127.0.0.1",
+    url: "http://127.0.0.1:5173",
+    reuseExistingServer: !process.env.CI,
+    timeout: 30000,
+  },
+});
